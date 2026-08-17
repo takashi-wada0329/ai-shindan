@@ -50,6 +50,15 @@
   .again{display:block;text-align:center;color:var(--sub);font-size:14px;margin-top:18px;
     background:none;border:0;width:100%;cursor:pointer;font-family:inherit;text-decoration:underline}
   .who{font-size:13px;color:var(--sub);border-top:1px solid var(--line);margin-top:26px;padding-top:16px}
+  .kwbox{margin-top:16px;background:#f6f1e6;border:1px dashed #d9cdb4;border-radius:12px;padding:14px 14px 12px}
+  .kwtitle{font-size:13px;font-weight:800;color:#8a6a2f}
+  .kwdesc{font-size:13px;color:var(--sub);margin:6px 0 10px;line-height:1.7}
+  .kwrow{display:flex;gap:8px;align-items:center}
+  .kw{flex:1;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px;
+    font-size:20px;font-weight:900;letter-spacing:.08em;text-align:center}
+  .kwcopy{background:#3b3f4a;color:#fff;border:0;border-radius:8px;padding:12px 16px;
+    font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+  .kwcopy:active{transform:translateY(1px)}
   .hide{display:none}
   footer{font-size:12px;color:var(--sub);text-align:center;margin-top:26px}
 </style>
@@ -100,6 +109,14 @@
       <ul class="points" id="rpoints"></ul>
       <a class="cta" id="cta" href="#">▶ 最初の3ステップを受け取る（無料）</a>
       <div class="ctanote">タップするとLINEが開きます。<br>そのまま送信すると、あなたのタイプ専用の手順が届きます。</div>
+      <div class="kwbox">
+        <div class="kwtitle">友だち追加の画面が出た場合は</div>
+        <p class="kwdesc">追加したあと、この言葉をそのまま送ってください。<br>自動でタイプ別の手順が届きます。</p>
+        <div class="kwrow">
+          <span class="kw" id="kwtext">診断A</span>
+          <button class="kwcopy" id="kwcopy" onclick="copyKw()">コピー</button>
+        </div>
+      </div>
       <button class="again" onclick="location.reload()">もう一度診断する</button>
     </div>
     <div class="who">
@@ -210,6 +227,19 @@ function choose(o) {
   if (idx < QUESTIONS.length) { render(); window.scrollTo(0, 0); }
   else showResult();
 }
+function copyKw() {
+  const kw = document.getElementById('kwtext').textContent;
+  const btn = document.getElementById('kwcopy');
+  const done = () => { btn.textContent = 'コピーしました'; setTimeout(() => { btn.textContent = 'コピー'; }, 2000); };
+  if (navigator.clipboard) navigator.clipboard.writeText(kw).then(done).catch(fallback);
+  else fallback();
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = kw; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { /* 手動選択に任せる */ }
+    document.body.removeChild(ta);
+  }
+}
 function showResult() {
   const key = Object.keys(score).sort((a, b) => score[b] - score[a])[0];
   const t = TYPES[key];
@@ -220,6 +250,7 @@ function showResult() {
   const ul = document.getElementById('rpoints');
   ul.innerHTML = '';
   t.points.forEach((p) => { const li = document.createElement('li'); li.textContent = p; ul.appendChild(li); });
+  document.getElementById('kwtext').textContent = t.kw;
   const cta = document.getElementById('cta');
   cta.href = CTA_LINK[key];   // タイプ別の計測つきリンク（クリック数が記録される）
   beacon(BEACON.done);        // 結果表示まで到達した数
