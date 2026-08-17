@@ -158,12 +158,33 @@ const TYPES = {
     kw: '診断D' },
 };
 
+// ---- 計測（①表示 ②診断開始 ③結果表示 ④CTAクリック）----
+// 既存の自社短縮URL（l.taka-fx.com）をビーコンとして使う。クリック数が自動集計される。
+// 離脱するCTAは sendBeacon で送る（通常のfetchだと遷移で消えるため）。
+const BEACON = {
+  start: 'https://l.taka-fx.com/r/ur5fz',
+  done:  'https://l.taka-fx.com/r/cupg5',
+};
+const CTA_LINK = {
+  A: 'https://l.taka-fx.com/r/qkjqn',
+  B: 'https://l.taka-fx.com/r/73yyb',
+  C: 'https://l.taka-fx.com/r/d6xsy',
+  D: 'https://l.taka-fx.com/r/s9vr3',
+};
+function beacon(url) {
+  try {
+    if (navigator.sendBeacon) navigator.sendBeacon(url);
+    else new Image().src = url + '?t=' + Date.now();
+  } catch (e) { /* 計測失敗で体験は壊さない */ }
+}
+
 let idx = 0;
 const score = { A: 0, B: 0, C: 0, D: 0 };
 
 function start() {
   document.getElementById('intro').classList.add('hide');
   document.getElementById('quiz').classList.remove('hide');
+  beacon(BEACON.start);
   render();
   window.scrollTo(0, 0);
 }
@@ -199,8 +220,9 @@ function showResult() {
   const ul = document.getElementById('rpoints');
   ul.innerHTML = '';
   t.points.forEach((p) => { const li = document.createElement('li'); li.textContent = p; ul.appendChild(li); });
-  document.getElementById('cta').href =
-    'https://line.me/R/oaMessage/' + encodeURIComponent(LINE_ID) + '/?' + encodeURIComponent(t.kw);
+  const cta = document.getElementById('cta');
+  cta.href = CTA_LINK[key];   // タイプ別の計測つきリンク（クリック数が記録される）
+  beacon(BEACON.done);        // 結果表示まで到達した数
   window.scrollTo(0, 0);
 }
 </script>
